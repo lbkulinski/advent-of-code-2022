@@ -37,6 +37,16 @@ public final class CampCleanupPart2 {
         return Integer.parseInt(groupString);
     } //parseInt
 
+    private static Range getRange(Matcher matcher, int startGroupIndex, int endGroupIndex) {
+        Objects.requireNonNull(matcher);
+
+        int start = CampCleanupPart2.parseInt(matcher, startGroupIndex);
+
+        int end = CampCleanupPart2.parseInt(matcher, endGroupIndex);
+
+        return new Range(start, end);
+    } //getRange
+
     public static void main(String[] args) {
         Path path = Path.of("src/main/resources/day4/input.txt");
 
@@ -63,17 +73,9 @@ public final class CampCleanupPart2 {
                 throw new IllegalStateException();
             } //end if
 
-            int start0 = CampCleanupPart2.parseInt(matcher, 1);
+            Range range0 = CampCleanupPart2.getRange(matcher, 1, 2);
 
-            int end0 = CampCleanupPart2.parseInt(matcher, 2);
-
-            Range range0 = new Range(start0, end0);
-
-            int start1 = CampCleanupPart2.parseInt(matcher, 3);
-
-            int end1 = CampCleanupPart2.parseInt(matcher, 4);
-
-            Range range1 = new Range(start1, end1);
+            Range range1 = CampCleanupPart2.getRange(matcher, 3, 4);
 
             if (range0.overlaps(range1)) {
                 overlapCount++;
