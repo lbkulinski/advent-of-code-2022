@@ -47,10 +47,10 @@ public final class SupplyStacksPart2 {
         return Integer.parseInt(stackCountString);
     } //getStackCount
 
-    private record Result(List<Deque<String>> stacks, List<String> instructions) {
-    } //Result
+    private record StartingStacks(List<Deque<String>> stacks, List<String> instructions) {
+    } //StartingStacks
 
-    private static Result getStacksResult(List<String> lines) {
+    private static StartingStacks getStartingStacks(List<String> lines) {
         Objects.requireNonNull(lines);
 
         int stackCount = SupplyStacksPart2.getStackCount(lines);
@@ -106,8 +106,8 @@ public final class SupplyStacksPart2 {
 
         List<String> instructions = lines.subList(instructionsIndex, endIndex);
 
-        return new Result(stacks, instructions);
-    } //getStacksResult
+        return new StartingStacks(stacks, instructions);
+    } //getStartingStacks
 
     private static int getGroup(Matcher matcher, int group) {
         String groupString = matcher.group(group);
@@ -118,15 +118,15 @@ public final class SupplyStacksPart2 {
     private static List<Deque<String>> getModifiedStacks(List<String> lines) {
         Objects.requireNonNull(lines);
 
-        Result stacksResult = SupplyStacksPart2.getStacksResult(lines);
+        StartingStacks startingStacks = SupplyStacksPart2.getStartingStacks(lines);
 
-        List<String> instructions = stacksResult.instructions();
+        List<String> instructions = startingStacks.instructions();
 
         String regex = "^move (\\d+) from (\\d+) to (\\d+)$";
 
         Pattern pattern = Pattern.compile(regex);
 
-        List<Deque<String>> stacks = stacksResult.stacks();
+        List<Deque<String>> stacks = startingStacks.stacks();
 
         for (String instruction : instructions) {
             Matcher matcher = pattern.matcher(instruction);
