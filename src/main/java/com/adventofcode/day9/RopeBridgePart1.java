@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 public final class RopeBridgePart1 {
     private record Point(int x, int y) {
@@ -18,14 +17,16 @@ public final class RopeBridgePart1 {
 
         private Point tail;
 
-        private final Set<Point> previousTailPoints;
+        private final Set<Point> tailPoints;
 
         public Rope() {
             this.head = new Point(0, 0);
 
             this.tail = new Point(0, 0);
 
-            this.previousTailPoints = new HashSet<>();
+            this.tailPoints = new HashSet<>();
+
+            this.tailPoints.add(this.tail);
         } //Rope
     } //Rope
 
@@ -33,33 +34,35 @@ public final class RopeBridgePart1 {
         Objects.requireNonNull(rope);
 
         for (int i = 0; i < count; i++) {
-            int newHeadX = rope.head.x() + 1;
+            int newHeadX = rope.head.x + 1;
 
-            int newHeadY = rope.head.y();
+            int newHeadY = rope.head.y;
 
             rope.head = new Point(newHeadX, newHeadY);
 
-            int xDifference = Math.abs(rope.head.x() - rope.tail.x());
+            int xDifference = Math.abs(rope.head.x - rope.tail.x);
 
-            int yDifference = Math.abs(rope.head.y() - rope.tail.y());
+            int yDifference = Math.abs(rope.head.y - rope.tail.y);
 
             if ((xDifference <= 1) && (yDifference <= 1)) {
                 continue;
             } //end if
 
-            int newTailX = rope.tail.x() + 1;
+            int newTailX = rope.tail.x + 1;
 
             int newTailY;
 
             if ((xDifference == 2) && (yDifference == 0)) {
-                newTailY = rope.tail.y();
+                newTailY = rope.tail.y;
+            } else if (rope.tail.y > rope.head.y) {
+                newTailY = rope.tail.y - 1;
             } else {
-                newTailY = rope.tail.y() + 1;
+                newTailY = rope.tail.y + 1;
             } //end if
 
             rope.tail = new Point(newTailX, newTailY);
 
-            rope.previousTailPoints.add(rope.tail);
+            rope.tailPoints.add(rope.tail);
         } //end for
     } //handleRightMoves
 
@@ -67,33 +70,35 @@ public final class RopeBridgePart1 {
         Objects.requireNonNull(rope);
 
         for (int i = 0; i < count; i++) {
-            int newHeadX = rope.head.x() - 1;
+            int newHeadX = rope.head.x - 1;
 
-            int newHeadY = rope.head.y();
+            int newHeadY = rope.head.y;
 
             rope.head = new Point(newHeadX, newHeadY);
 
-            int xDifference = Math.abs(rope.head.x() - rope.tail.x());
+            int xDifference = Math.abs(rope.head.x - rope.tail.x);
 
-            int yDifference = Math.abs(rope.head.y() - rope.tail.y());
+            int yDifference = Math.abs(rope.head.y - rope.tail.y);
 
             if ((xDifference <= 1) && (yDifference <= 1)) {
                 continue;
             } //end if
 
-            int newTailX = rope.tail.x() - 1;
+            int newTailX = rope.tail.x - 1;
 
             int newTailY;
 
             if ((xDifference == 2) && (yDifference == 0)) {
-                newTailY = rope.tail.y();
+                newTailY = rope.tail.y;
+            } else if (rope.tail.y > rope.head.y) {
+                newTailY = rope.tail.y - 1;
             } else {
-                newTailY = rope.tail.y() + 1;
+                newTailY = rope.tail.y + 1;
             } //end if
 
             rope.tail = new Point(newTailX, newTailY);
 
-            rope.previousTailPoints.add(rope.tail);
+            rope.tailPoints.add(rope.tail);
         } //end for
     } //handleLeftMoves
 
@@ -101,15 +106,15 @@ public final class RopeBridgePart1 {
         Objects.requireNonNull(rope);
 
         for (int i = 0; i < count; i++) {
-            int newHeadX = rope.head.x();
+            int newHeadX = rope.head.x;
 
-            int newHeadY = rope.head.y() + 1;
+            int newHeadY = rope.head.y + 1;
 
             rope.head = new Point(newHeadX, newHeadY);
 
-            int xDifference = Math.abs(rope.head.x() - rope.tail.x());
+            int xDifference = Math.abs(rope.head.x - rope.tail.x);
 
-            int yDifference = Math.abs(rope.head.y() - rope.tail.y());
+            int yDifference = Math.abs(rope.head.y - rope.tail.y);
 
             if ((xDifference <= 1) && (yDifference <= 1)) {
                 continue;
@@ -117,17 +122,19 @@ public final class RopeBridgePart1 {
 
             int newTailX;
 
-            int newTailY = rope.tail.y() + 1;
-
             if ((xDifference == 0) && (yDifference == 2)) {
-                newTailX = rope.tail.x();
+                newTailX = rope.tail.x;
+            } else if (rope.tail.x > rope.head.x) {
+                newTailX = rope.tail.x - 1;
             } else {
-                newTailX = rope.tail.x() + 1;
+                newTailX = rope.tail.x + 1;
             } //end if
+
+            int newTailY = rope.tail.y + 1;
 
             rope.tail = new Point(newTailX, newTailY);
 
-            rope.previousTailPoints.add(rope.tail);
+            rope.tailPoints.add(rope.tail);
         } //end for
     } //handleUpMoves
 
@@ -135,15 +142,15 @@ public final class RopeBridgePart1 {
         Objects.requireNonNull(rope);
 
         for (int i = 0; i < count; i++) {
-            int newHeadX = rope.head.x();
+            int newHeadX = rope.head.x;
 
-            int newHeadY = rope.head.y() - 1;
+            int newHeadY = rope.head.y - 1;
 
             rope.head = new Point(newHeadX, newHeadY);
 
-            int xDifference = Math.abs(rope.head.x() - rope.tail.x());
+            int xDifference = Math.abs(rope.head.x - rope.tail.x);
 
-            int yDifference = Math.abs(rope.head.y() - rope.tail.y());
+            int yDifference = Math.abs(rope.head.y - rope.tail.y);
 
             if ((xDifference <= 1) && (yDifference <= 1)) {
                 continue;
@@ -151,22 +158,24 @@ public final class RopeBridgePart1 {
 
             int newTailX;
 
-            int newTailY = rope.tail.y() - 1;
-
             if ((xDifference == 0) && (yDifference == 2)) {
-                newTailX = rope.tail.x();
+                newTailX = rope.tail.x;
+            } else if (rope.tail.x > rope.head.x) {
+                newTailX = rope.tail.x - 1;
             } else {
-                newTailX = rope.tail.x() - 1;
+                newTailX = rope.tail.x + 1;
             } //end if
+
+            int newTailY = rope.tail.y - 1;
 
             rope.tail = new Point(newTailX, newTailY);
 
-            rope.previousTailPoints.add(rope.tail);
+            rope.tailPoints.add(rope.tail);
         } //end for
     } //handleDownMoves
 
     public static void main(String[] args) {
-        Path path = Path.of("src/main/resources/day9/sample.txt");
+        Path path = Path.of("src/main/resources/day9/input.txt");
 
         List<String> lines;
 
@@ -210,6 +219,8 @@ public final class RopeBridgePart1 {
             } //end switch
         } //end for
 
-        System.out.println(rope.previousTailPoints.size());
+        int tailPositions = rope.tailPoints.size();
+
+        System.out.printf("Tail Positions: %d%n", tailPositions);
     } //main
 }
