@@ -9,24 +9,24 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class RopeBridgePart1 {
-    private record Point(int x, int y) {
-    } //Point
+    private record Knot(int x, int y) {
+    } //Knot
 
     private static final class Rope {
-        private Point head;
+        private Knot head;
 
-        private Point tail;
+        private Knot tail;
 
-        private final Set<Point> tailPoints;
+        private final Set<Knot> visitedTails;
 
         public Rope() {
-            this.head = new Point(0, 0);
+            this.head = new Knot(0, 0);
 
-            this.tail = new Point(0, 0);
+            this.tail = new Knot(0, 0);
 
-            this.tailPoints = new HashSet<>();
+            this.visitedTails = new HashSet<>();
 
-            this.tailPoints.add(this.tail);
+            this.visitedTails.add(this.tail);
         } //Rope
     } //Rope
 
@@ -38,7 +38,7 @@ public final class RopeBridgePart1 {
 
             int newHeadY = rope.head.y;
 
-            rope.head = new Point(newHeadX, newHeadY);
+            rope.head = new Knot(newHeadX, newHeadY);
 
             int xDifference = Math.abs(rope.head.x - rope.tail.x);
 
@@ -60,9 +60,9 @@ public final class RopeBridgePart1 {
                 newTailY = rope.tail.y + 1;
             } //end if
 
-            rope.tail = new Point(newTailX, newTailY);
+            rope.tail = new Knot(newTailX, newTailY);
 
-            rope.tailPoints.add(rope.tail);
+            rope.visitedTails.add(rope.tail);
         } //end for
     } //handleRightMoves
 
@@ -74,7 +74,7 @@ public final class RopeBridgePart1 {
 
             int newHeadY = rope.head.y;
 
-            rope.head = new Point(newHeadX, newHeadY);
+            rope.head = new Knot(newHeadX, newHeadY);
 
             int xDifference = Math.abs(rope.head.x - rope.tail.x);
 
@@ -96,9 +96,9 @@ public final class RopeBridgePart1 {
                 newTailY = rope.tail.y + 1;
             } //end if
 
-            rope.tail = new Point(newTailX, newTailY);
+            rope.tail = new Knot(newTailX, newTailY);
 
-            rope.tailPoints.add(rope.tail);
+            rope.visitedTails.add(rope.tail);
         } //end for
     } //handleLeftMoves
 
@@ -110,7 +110,7 @@ public final class RopeBridgePart1 {
 
             int newHeadY = rope.head.y + 1;
 
-            rope.head = new Point(newHeadX, newHeadY);
+            rope.head = new Knot(newHeadX, newHeadY);
 
             int xDifference = Math.abs(rope.head.x - rope.tail.x);
 
@@ -132,9 +132,9 @@ public final class RopeBridgePart1 {
 
             int newTailY = rope.tail.y + 1;
 
-            rope.tail = new Point(newTailX, newTailY);
+            rope.tail = new Knot(newTailX, newTailY);
 
-            rope.tailPoints.add(rope.tail);
+            rope.visitedTails.add(rope.tail);
         } //end for
     } //handleUpMoves
 
@@ -146,7 +146,7 @@ public final class RopeBridgePart1 {
 
             int newHeadY = rope.head.y - 1;
 
-            rope.head = new Point(newHeadX, newHeadY);
+            rope.head = new Knot(newHeadX, newHeadY);
 
             int xDifference = Math.abs(rope.head.x - rope.tail.x);
 
@@ -168,9 +168,9 @@ public final class RopeBridgePart1 {
 
             int newTailY = rope.tail.y - 1;
 
-            rope.tail = new Point(newTailX, newTailY);
+            rope.tail = new Knot(newTailX, newTailY);
 
-            rope.tailPoints.add(rope.tail);
+            rope.visitedTails.add(rope.tail);
         } //end for
     } //handleDownMoves
 
@@ -219,7 +219,7 @@ public final class RopeBridgePart1 {
             } //end switch
         } //end for
 
-        int tailPositions = rope.tailPoints.size();
+        int tailPositions = rope.visitedTails.size();
 
         System.out.printf("Tail Positions: %d%n", tailPositions);
     } //main
