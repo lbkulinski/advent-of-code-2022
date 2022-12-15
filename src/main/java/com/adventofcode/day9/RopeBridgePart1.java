@@ -203,18 +203,10 @@ public final class RopeBridgePart1 {
             int count = Integer.parseInt(parts[1]);
 
             switch (direction) {
-                case "R" -> {
-                    RopeBridgePart1.handleRightMoves(rope, count);
-                } //case "R"
-                case "L" -> {
-                    RopeBridgePart1.handleLeftMoves(rope, count);
-                } //case "L"
-                case "U" -> {
-                    RopeBridgePart1.handleUpMoves(rope, count);
-                } //case "U"
-                case "D" -> {
-                    RopeBridgePart1.handleDownMoves(rope, count);
-                } //case "D"
+                case "R" -> RopeBridgePart1.handleRightMoves(rope, count);
+                case "L" -> RopeBridgePart1.handleLeftMoves(rope, count);
+                case "U" -> RopeBridgePart1.handleUpMoves(rope, count);
+                case "D" -> RopeBridgePart1.handleDownMoves(rope, count);
                 default -> throw new IllegalStateException();
             } //end switch
         } //end for
