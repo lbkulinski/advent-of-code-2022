@@ -38,7 +38,9 @@ public final class RopeBridgePart2 {
 
             int lastTailIndex = this.tails.length - 1;
 
-            this.visitedTails.add(this.tails[lastTailIndex]);
+            Knot lastTail = this.tails[lastTailIndex];
+
+            this.visitedTails.add(lastTail);
         } //Rope
     } //Rope
 
@@ -90,7 +92,9 @@ public final class RopeBridgePart2 {
 
             int lastTailIndex = rope.tails.length - 1;
 
-            rope.visitedTails.add(rope.tails[lastTailIndex]);
+            Knot lastTail = rope.tails[lastTailIndex];
+
+            rope.visitedTails.add(lastTail);
         } //end for
     } //handleRightMoves
 
@@ -142,7 +146,9 @@ public final class RopeBridgePart2 {
 
             int lastTailIndex = rope.tails.length - 1;
 
-            rope.visitedTails.add(rope.tails[lastTailIndex]);
+            Knot lastTail = rope.tails[lastTailIndex];
+
+            rope.visitedTails.add(lastTail);
         } //end for
     } //handleLeftMoves
 
@@ -194,7 +200,9 @@ public final class RopeBridgePart2 {
 
             int lastTailIndex = rope.tails.length - 1;
 
-            rope.visitedTails.add(rope.tails[lastTailIndex]);
+            Knot lastTail = rope.tails[lastTailIndex];
+
+            rope.visitedTails.add(lastTail);
         } //end for
     } //handleUpMoves
 
@@ -246,7 +254,9 @@ public final class RopeBridgePart2 {
 
             int lastTailIndex = rope.tails.length - 1;
 
-            rope.visitedTails.add(rope.tails[lastTailIndex]);
+            Knot lastTail = rope.tails[lastTailIndex];
+
+            rope.visitedTails.add(lastTail);
         } //end for
     } //handleDownMoves
 
