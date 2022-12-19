@@ -7,9 +7,11 @@ import java.util.*;
 import java.util.function.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public final class MonkeyInTheMiddlePart1 {
-    private record Monkey(List<Integer> items, ToIntFunction<Integer> operation, IntConsumer test) {
+    private record Monkey(Queue<Integer> items, ToIntFunction<Integer> operation, IntPredicate test, int trueIndex,
+        int falseIndex) {
         public Monkey {
             Objects.requireNonNull(items);
 
@@ -17,11 +19,11 @@ public final class MonkeyInTheMiddlePart1 {
 
             Objects.requireNonNull(test);
 
-            items = new ArrayList<>(items);
+            items = new ArrayDeque<>(items);
         } //Monkey
     } //Monkey
 
-    private static List<Integer> getItems(String monkeyDefinition) {
+    private static Queue<Integer> getItems(String monkeyDefinition) {
         Objects.requireNonNull(monkeyDefinition);
 
         String regex = "Starting items: (.+)";
@@ -42,7 +44,7 @@ public final class MonkeyInTheMiddlePart1 {
 
         return Arrays.stream(itemStrings)
                      .map(Integer::parseInt)
-                     .toList();
+                     .collect(Collectors.toCollection(ArrayDeque::new));
     } //getItems
 
     private static ToIntFunction<Integer> getOperation(String monkeyDefinition) {
@@ -64,10 +66,9 @@ public final class MonkeyInTheMiddlePart1 {
 
         if (rightOperandString.equalsIgnoreCase("old")) {
             return switch (operator) {
-                case "+" -> value -> value + value;
-                case "-" -> value -> 0;
-                case "*" -> value -> value * value;
-                case "/" -> value -> 1;
+                case "+" -> value -> (value + value) / 3;
+                case "-", "/" -> value -> 0;
+                case "*" -> value -> (value * value) / 3;
                 default -> throw new IllegalStateException();
             };
         } //end if
@@ -75,21 +76,18 @@ public final class MonkeyInTheMiddlePart1 {
         int rightOperand = Integer.parseInt(rightOperandString);
 
         return switch (operator) {
-            case "+" -> value -> value + rightOperand;
-            case "-" -> value -> value - rightOperand;
-            case "*" -> value -> value * rightOperand;
-            case "/" -> value -> value / rightOperand;
+            case "+" -> value -> (value + rightOperand) / 3;
+            case "-" -> value -> (value - rightOperand) / 3;
+            case "*" -> value -> (value * rightOperand) / 3;
+            case "/" -> value -> (value / rightOperand) / 3;
             default -> throw new IllegalStateException();
         };
     } //getOperation
 
-    private static IntConsumer getTest(String monkeyDefinition) {
+    private static IntPredicate getTest(String monkeyDefinition) {
         Objects.requireNonNull(monkeyDefinition);
 
-        String regex = """
-        Test: divisible by (\\d+)
-        \\s{4}If true: throw to monkey (\\d+)
-        \\s{4}If false: throw to monkey (\\d+)""";
+        String regex = "Test: divisible by (\\d+)";
 
         Pattern pattern = Pattern.compile(regex);
 
@@ -103,43 +101,105 @@ public final class MonkeyInTheMiddlePart1 {
 
         int divisor = Integer.parseInt(divisorString);
 
-        String trueIndexString = matcher.group(2);
-
-        int trueIndex = Integer.parseInt(trueIndexString);
-
-        String falseIndexString = matcher.group(3);
-
-        int falseIndex = Integer.parseInt(falseIndexString);
-
-        return value -> {};
+        return value -> (value % divisor) == 0;
     } //getTest
+
+    private static int getTrueIndex(String monkeyDefinition) {
+        Objects.requireNonNull(monkeyDefinition);
+
+        String regex = "If true: throw to monkey (\\d+)";
+
+        Pattern pattern = Pattern.compile(regex);
+
+        Matcher matcher = pattern.matcher(monkeyDefinition);
+
+        if (!matcher.find()) {
+            throw new IllegalStateException();
+        } //end if
+
+        String trueIndexString = matcher.group(1);
+
+        return Integer.parseInt(trueIndexString);
+    } //getTrueIndex
+
+    private static int getFalseIndex(String monkeyDefinition) {
+        Objects.requireNonNull(monkeyDefinition);
+
+        String regex = "If false: throw to monkey (\\d+)";
+
+        Pattern pattern = Pattern.compile(regex);
+
+        Matcher matcher = pattern.matcher(monkeyDefinition);
+
+        if (!matcher.find()) {
+            throw new IllegalStateException();
+        } //end if
+
+        String falseIndexString = matcher.group(1);
+
+        return Integer.parseInt(falseIndexString);
+    } //getFalseIndex
 
     private static Monkey parseMonkeyDefinition(String monkeyDefinition) {
         Objects.requireNonNull(monkeyDefinition);
 
-        List<Integer> items = MonkeyInTheMiddlePart1.getItems(monkeyDefinition);
+        Queue<Integer> items = MonkeyInTheMiddlePart1.getItems(monkeyDefinition);
 
         ToIntFunction<Integer> operation = MonkeyInTheMiddlePart1.getOperation(monkeyDefinition);
 
-        IntConsumer test = MonkeyInTheMiddlePart1.getTest(monkeyDefinition);
+        IntPredicate test = MonkeyInTheMiddlePart1.getTest(monkeyDefinition);
 
-        return new Monkey(items, operation, test);
+        int trueIndex = MonkeyInTheMiddlePart1.getTrueIndex(monkeyDefinition);
+
+        int falseIndex = MonkeyInTheMiddlePart1.getFalseIndex(monkeyDefinition);
+
+        return new Monkey(items, operation, test, trueIndex, falseIndex);
     } //parseMonkeyDefinition
 
-    public static void main(String[] args) {
-        Path path = Path.of("src/main/resources/day11/sample.txt");
+    private static void commenceRound(List<Monkey> monkeys, Map<Integer, Integer> indexToInspectionCount) {
+        Objects.requireNonNull(monkeys);
 
-        String lines;
+        Objects.requireNonNull(indexToInspectionCount);
 
-        try {
-            lines = Files.readString(path);
-        } catch (IOException e) {
-            e.printStackTrace();
+        for (int i = 0; i < monkeys.size(); i++) {
+            Monkey monkey = monkeys.get(i);
 
-            return;
-        } //end try catch
+            Queue<Integer> items = monkey.items();
 
-        lines = lines.trim();
+            ToIntFunction<Integer> operation = monkey.operation();
+
+            IntPredicate test = monkey.test();
+
+            while (!items.isEmpty()) {
+                indexToInspectionCount.compute(i, (key, value) -> (value == null) ? 1 : (value + 1));
+
+                int item = items.remove();
+
+                int transformedItem = operation.applyAsInt(item);
+
+                if (test.test(transformedItem)) {
+                    int trueIndex = monkey.trueIndex();
+
+                    Monkey trueMonkey = monkeys.get(trueIndex);
+
+                    trueMonkey.items()
+                              .add(transformedItem);
+
+                    continue;
+                } //end if
+
+                int falseIndex = monkey.falseIndex();
+
+                Monkey falseMonkey = monkeys.get(falseIndex);
+
+                falseMonkey.items()
+                           .add(transformedItem);
+            } //end while
+        } //end for
+    } //commenceRound
+
+    private static int getMonkeyBusiness(String lines) {
+        Objects.requireNonNull(lines);
 
         String regex = "\n\n";
 
@@ -153,6 +213,44 @@ public final class MonkeyInTheMiddlePart1 {
             monkeys.add(monkey);
         } //end for
 
-        monkeys.forEach(System.out::println);
+        int monkeyCount = monkeys.size();
+
+        Map<Integer, Integer> indexToInspectionCount = HashMap.newHashMap(monkeyCount);
+
+        for (int i = 0; i < 20; i++) {
+            MonkeyInTheMiddlePart1.commenceRound(monkeys, indexToInspectionCount);
+        } //end for
+
+        Comparator<Integer> descendingComparator = (x, y) -> Integer.compare(y, x);
+
+        long maxInspectionCounts = 2L;
+
+        IntBinaryOperator productOperator = (x, y) -> x * y;
+
+        return indexToInspectionCount.values()
+                                     .stream()
+                                     .sorted(descendingComparator)
+                                     .limit(maxInspectionCounts)
+                                     .mapToInt(Integer::intValue)
+                                     .reduce(productOperator)
+                                     .orElseThrow();
+    } //getMonkeyBusiness
+
+    public static void main(String[] args) {
+        Path path = Path.of("src/main/resources/day11/input.txt");
+
+        String lines;
+
+        try {
+            lines = Files.readString(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+
+            return;
+        } //end try catch
+
+        int monkeyBusiness = MonkeyInTheMiddlePart1.getMonkeyBusiness(lines);
+
+        System.out.printf("Monkey Business: %d%n", monkeyBusiness);
     } //main
 }
