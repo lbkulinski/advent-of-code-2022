@@ -1,6 +1,7 @@
 package com.adventofcode.day11;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -9,9 +10,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public final class MonkeyInTheMiddlePart1 {
-    private record Monkey(Queue<Integer> items, ToIntFunction<Integer> operation, IntPredicate test, int trueIndex,
-        int falseIndex) {
+public final class MonkeyInTheMiddlePart2 {
+    private record Monkey(Queue<BigInteger> items, Function<BigInteger, BigInteger> operation,
+        Predicate<BigInteger> test, int trueIndex, int falseIndex) {
         public Monkey {
             Objects.requireNonNull(items);
 
@@ -23,7 +24,7 @@ public final class MonkeyInTheMiddlePart1 {
         } //Monkey
     } //Monkey
 
-    private static Queue<Integer> getItems(String monkeyDefinition) {
+    private static Queue<BigInteger> getItems(String monkeyDefinition) {
         Objects.requireNonNull(monkeyDefinition);
 
         String regex = "Starting items: (.+)";
@@ -43,11 +44,29 @@ public final class MonkeyInTheMiddlePart1 {
         String[] itemStrings = itemsString.split(separator);
 
         return Arrays.stream(itemStrings)
-                     .map(Integer::parseInt)
+                     .map(BigInteger::new)
                      .collect(Collectors.toCollection(ArrayDeque::new));
     } //getItems
 
-    private static ToIntFunction<Integer> getOperation(String monkeyDefinition) {
+    private static BigInteger getTestDivisor(String monkeyDefinition) {
+        Objects.requireNonNull(monkeyDefinition);
+
+        String regex = "Test: divisible by (\\d+)";
+
+        Pattern pattern = Pattern.compile(regex);
+
+        Matcher matcher = pattern.matcher(monkeyDefinition);
+
+        if (!matcher.find()) {
+            throw new IllegalStateException();
+        } //end if
+
+        String divisorString = matcher.group(1);
+
+        return new BigInteger(divisorString);
+    } //getTestDivisor
+
+    private static Function<BigInteger, BigInteger> getOperation(String monkeyDefinition, BigInteger divisor) {
         Objects.requireNonNull(monkeyDefinition);
 
         String regex = "Operation: new = old ([+\\-*/]) (.*)";
@@ -66,25 +85,32 @@ public final class MonkeyInTheMiddlePart1 {
 
         if (rightOperandString.equalsIgnoreCase("old")) {
             return switch (operator) {
-                case "+" -> value -> (value + value) / 3;
-                case "-", "/" -> value -> 0;
-                case "*" -> value -> (value * value) / 3;
+                case "+" -> value -> value.add(value)
+                                          .mod(divisor);
+                case "-" -> value -> BigInteger.ZERO;
+                case "*" -> value -> value.multiply(value)
+                                          .mod(divisor);
+                case "/" -> value -> BigInteger.ONE.mod(divisor);
                 default -> throw new IllegalStateException();
             };
         } //end if
 
-        int rightOperand = Integer.parseInt(rightOperandString);
+        BigInteger rightOperand = new BigInteger(rightOperandString);
 
         return switch (operator) {
-            case "+" -> value -> (value + rightOperand) / 3;
-            case "-" -> value -> (value - rightOperand) / 3;
-            case "*" -> value -> (value * rightOperand) / 3;
-            case "/" -> value -> (value / rightOperand) / 3;
+            case "+" -> value -> value.add(rightOperand)
+                                      .mod(divisor);
+            case "-" -> value -> value.subtract(rightOperand)
+                                      .mod(divisor);
+            case "*" -> value -> value.multiply(rightOperand)
+                                      .mod(divisor);
+            case "/" -> value -> value.divide(rightOperand)
+                                      .mod(divisor);
             default -> throw new IllegalStateException();
         };
     } //getOperation
 
-    private static IntPredicate getTest(String monkeyDefinition) {
+    private static Predicate<BigInteger> getTest(String monkeyDefinition) {
         Objects.requireNonNull(monkeyDefinition);
 
         String regex = "Test: divisible by (\\d+)";
@@ -99,9 +125,13 @@ public final class MonkeyInTheMiddlePart1 {
 
         String divisorString = matcher.group(1);
 
-        int divisor = Integer.parseInt(divisorString);
+        BigInteger divisor = new BigInteger(divisorString);
 
-        return value -> (value % divisor) == 0;
+        return value -> {
+            BigInteger remainder = value.mod(divisor);
+
+            return remainder.equals(BigInteger.ZERO);
+        };
     } //getTest
 
     private static int getTrueIndex(String monkeyDefinition) {
@@ -140,23 +170,23 @@ public final class MonkeyInTheMiddlePart1 {
         return Integer.parseInt(falseIndexString);
     } //getFalseIndex
 
-    private static Monkey parseMonkeyDefinition(String monkeyDefinition) {
+    private static Monkey parseMonkeyDefinition(String monkeyDefinition, BigInteger divisor) {
         Objects.requireNonNull(monkeyDefinition);
 
-        Queue<Integer> items = MonkeyInTheMiddlePart1.getItems(monkeyDefinition);
+        Queue<BigInteger> items = MonkeyInTheMiddlePart2.getItems(monkeyDefinition);
 
-        ToIntFunction<Integer> operation = MonkeyInTheMiddlePart1.getOperation(monkeyDefinition);
+        Function<BigInteger, BigInteger> operation = MonkeyInTheMiddlePart2.getOperation(monkeyDefinition, divisor);
 
-        IntPredicate test = MonkeyInTheMiddlePart1.getTest(monkeyDefinition);
+        Predicate<BigInteger> test = MonkeyInTheMiddlePart2.getTest(monkeyDefinition);
 
-        int trueIndex = MonkeyInTheMiddlePart1.getTrueIndex(monkeyDefinition);
+        int trueIndex = MonkeyInTheMiddlePart2.getTrueIndex(monkeyDefinition);
 
-        int falseIndex = MonkeyInTheMiddlePart1.getFalseIndex(monkeyDefinition);
+        int falseIndex = MonkeyInTheMiddlePart2.getFalseIndex(monkeyDefinition);
 
         return new Monkey(items, operation, test, trueIndex, falseIndex);
     } //parseMonkeyDefinition
 
-    private static void commenceRound(List<Monkey> monkeys, Map<Integer, Integer> indexToInspectionCount) {
+    private static void commenceRound(List<Monkey> monkeys, Map<Integer, BigInteger> indexToInspectionCount) {
         Objects.requireNonNull(monkeys);
 
         Objects.requireNonNull(indexToInspectionCount);
@@ -164,18 +194,24 @@ public final class MonkeyInTheMiddlePart1 {
         for (int i = 0; i < monkeys.size(); i++) {
             Monkey monkey = monkeys.get(i);
 
-            Queue<Integer> items = monkey.items();
+            Queue<BigInteger> items = monkey.items();
 
-            ToIntFunction<Integer> operation = monkey.operation();
+            Function<BigInteger, BigInteger> operation = monkey.operation();
 
-            IntPredicate test = monkey.test();
+            Predicate<BigInteger> test = monkey.test();
 
             while (!items.isEmpty()) {
-                indexToInspectionCount.compute(i, (key, value) -> (value == null) ? 1 : (value + 1));
+                indexToInspectionCount.compute(i, (key, value) -> {
+                    if (value == null) {
+                        return BigInteger.ONE;
+                    } //end if
 
-                int item = items.remove();
+                    return value.add(BigInteger.ONE);
+                });
 
-                int transformedItem = operation.applyAsInt(item);
+                BigInteger item = items.remove();
+
+                BigInteger transformedItem = operation.apply(item);
 
                 if (test.test(transformedItem)) {
                     int trueIndex = monkey.trueIndex();
@@ -198,41 +234,46 @@ public final class MonkeyInTheMiddlePart1 {
         } //end for
     } //commenceRound
 
-    private static int getMonkeyBusiness(String lines) {
+    private static BigInteger getMonkeyBusiness(String lines) {
         Objects.requireNonNull(lines);
 
         String regex = "\n\n";
 
         String[] monkeyDefinitions = lines.split(regex);
 
+        BigInteger divisor = BigInteger.ONE;
+
+        for (String monkeyDefinition : monkeyDefinitions) {
+            BigInteger testDivisor = MonkeyInTheMiddlePart2.getTestDivisor(monkeyDefinition);
+
+            divisor = divisor.multiply(testDivisor);
+        } //end for
+
         List<Monkey> monkeys = new ArrayList<>();
 
         for (String monkeyDefinition : monkeyDefinitions) {
-            Monkey monkey = MonkeyInTheMiddlePart1.parseMonkeyDefinition(monkeyDefinition);
+            Monkey monkey = MonkeyInTheMiddlePart2.parseMonkeyDefinition(monkeyDefinition, divisor);
 
             monkeys.add(monkey);
         } //end for
 
         int monkeyCount = monkeys.size();
 
-        Map<Integer, Integer> indexToInspectionCount = HashMap.newHashMap(monkeyCount);
+        Map<Integer, BigInteger> indexToInspectionCount = HashMap.newHashMap(monkeyCount);
 
-        for (int i = 0; i < 20; i++) {
-            MonkeyInTheMiddlePart1.commenceRound(monkeys, indexToInspectionCount);
+        for (int i = 0; i < 10_000; i++) {
+            MonkeyInTheMiddlePart2.commenceRound(monkeys, indexToInspectionCount);
         } //end for
 
-        Comparator<Integer> descendingComparator = Comparator.reverseOrder();
+        Comparator<BigInteger> descendingComparator = Comparator.reverseOrder();
 
         long maxInspectionCounts = 2L;
 
-        IntBinaryOperator productOperator = (x, y) -> x * y;
-
         return indexToInspectionCount.values()
                                      .stream()
-                                     .sorted(Comparator.reverseOrder())
+                                     .sorted(descendingComparator)
                                      .limit(maxInspectionCounts)
-                                     .mapToInt(Integer::intValue)
-                                     .reduce(productOperator)
+                                     .reduce(BigInteger::multiply)
                                      .orElseThrow();
     } //getMonkeyBusiness
 
@@ -249,8 +290,8 @@ public final class MonkeyInTheMiddlePart1 {
             return;
         } //end try catch
 
-        int monkeyBusiness = MonkeyInTheMiddlePart1.getMonkeyBusiness(lines);
+        BigInteger monkeyBusiness = MonkeyInTheMiddlePart2.getMonkeyBusiness(lines);
 
-        System.out.printf("Monkey Business: %d%n", monkeyBusiness);
+        System.out.printf("Monkey Business: %s%n", monkeyBusiness);
     } //main
 }
